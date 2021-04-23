@@ -54,9 +54,11 @@
         });
     };
 
-    OCA.DrawIO.EditFile = function (editWindow, filePath, origin,  autosave) {
+    OCA.DrawIO.EditFile = function (editWindow, filePath, origin,  autosave, basicsync) {
         var ncClient = OC.Files.getClient();
         var autosaveEnabled = autosave === "yes";
+        var basicSyncEnabled = basicsync === "yes";
+        window.lastDiagram = null; // Place to cache the diagram for future comparing purposes
         var fileId = $("#iframeEditor").data("id");
         var shareToken = $("#iframeEditor").data("sharetoken");
         if (!fileId && !shareToken) {
@@ -90,6 +92,7 @@
 	                                    xml: data
     		                    }), "*");
                 		    OC.Notification.hide(loadMsg);
+                            window.lastDiagram = data; // Cache the recently saved diagram for future comparing purposes
 			    },
 			    fail: function (status) {
 
@@ -101,6 +104,33 @@
                                 OC.Notification.hide(loadMsg);
 			    }
 			});
+                
+                // Basic Sync: Every XXXX Milliseconds, reloads the whole XML File and merges its contents into the current Diagram
+                if (basicSyncEnabled) {
+                    setInterval(function(){                        
+                        if (new Blob([window.lastDiagram]).size < 150000) { // max sync filesize in Byte
+                            editWindow.postMessage(JSON.stringify({action: 'status', message: "Syncing.. ", modified: false }), '*');
+                            $.ajax({
+                                url: fileUrl,
+                                success: function onSuccess(data) {
+                                    if (window.lastDiagram !== data) {
+                                        console.log("content differs, old hash: " + window.lastDiagram.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0));
+                                        console.log("new hash: " + data.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)); 
+                                        window.lastDiagram = data;
+                                        editWindow.postMessage(JSON.stringify({
+                                            action: "merge",                                                
+                                            xml: data
+                                        }), "*");                                        
+                                    }
+                                    editWindow.postMessage(JSON.stringify({action: 'status', message: "", modified: false }), '*');
+                                }                       
+                            })
+                        } else {
+                            editWindow.postMessage(JSON.stringify({action: 'status', message: "Not Syncing, file too big.. ", modified: false }), '*');
+                        }   
+                    }, 7000);
+                }
+
 		    } else {
                     ncClient.getFileContents(filePath)
                     .then(function (status, contents) {
@@ -120,6 +150,7 @@
                                 autosave: Number(autosaveEnabled),
                                 xml: contents
                             }), "*");
+                            window.lastDiagram = contents; // Cache the recently saved diagram for future comparing purposes
                         }
                     })
                     .fail(function (status) {
@@ -130,6 +161,31 @@
                     .done(function () {
                         OC.Notification.hide(loadMsg);
                     });
+
+                    // Basic Sync: Every XXXX Milliseconds, reloads the whole XML File and merges its contents into the current Diagram
+                    if (basicSyncEnabled) {                        
+                        setInterval(function(){
+                            if (new Blob([window.lastDiagram]).size < 150000) { // max sync filesize in Byte
+                                editWindow.postMessage(JSON.stringify({action: 'status', message: "Syncing.. ", modified: false }), '*');
+                                ncClient.getFileContents(filePath)
+                                    .then(function (status, contents) {                                    
+                                        if (window.lastDiagram !== contents) {
+                                            console.log("content differs, old hash: " + window.lastDiagram.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0));
+                                            console.log("new hash: " + contents.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)); 
+                                            window.lastDiagram = contents;
+                                            editWindow.postMessage(JSON.stringify({
+                                                action: "merge",                                                
+                                                xml: contents
+                                            }), "*");                                            
+                                        }
+                                        editWindow.postMessage(JSON.stringify({action: 'status', message: "", modified: false }), '*');
+                                    })                                 
+                            } else {
+                                editWindow.postMessage(JSON.stringify({action: 'status', message: "Not Syncing, file too big.. ", modified: false }), '*');
+                            }                            
+                        }, 7000);
+                    }
+
         }
                 } else if (payload.event === "template") {
                   //template selected
@@ -156,6 +212,8 @@
                             message: "Autosave successful at " + time.toLocaleTimeString(),
                             modified: false
                         }), '*');
+                        window.lastDiagram = payload.xml; // Cache the recently saved diagram for future comparing purposes
+                        if (basicSyncEnabled) { console.log("Saved with hash: " + payload.xml.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0))};
                     })
                     .fail(function (status) {
                         editWindow.postMessage(JSON.stringify({
@@ -175,6 +233,8 @@
                     )
                     .then(function (status) {
                         OC.Notification.showTemporary(t(OCA.DrawIO.AppName, "File saved!"));
+                        window.lastDiagram = payload.xml; // Cache the recently saved diagram for future comparing purposes
+                        if (basicSyncEnabled) { console.log("Saved with hash: " + payload.xml.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0))};
                     })
                     .fail(function (status) {
                         // TODO: handle on failed write

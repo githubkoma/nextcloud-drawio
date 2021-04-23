@@ -47,6 +47,15 @@
             </select>
     </p>
 
+    <p class="drawio-header">
+        <label for='drawioBasicSync'><?php p($l->t("Activate Basic Sync?")) ?>
+            <select id="drawioBasicSync">
+                <option value="yes"<?php if ($_["drawioBasicSync"] === "yes") echo ' selected'; ?>><?php p($l->t("Yes")) ?></option>
+                <option value="no"<?php if ($_["drawioBasicSync"] === "no") echo ' selected'; ?>><?php p($l->t("No")) ?></option>
+            </select>
+    </p>
+    <p style='color: red'><?php p($l->t("Attention: \"Basic Sync\" is experimental und rudimentary! Results could be unreliable, bandwidth usage and sync-latency are high.")) ?></p>
+
     <br />
     <a id="drawioSave" class="button"><?php p($l->t("Save")) ?></a>
 </div>

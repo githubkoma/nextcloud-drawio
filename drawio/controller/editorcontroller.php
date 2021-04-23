@@ -221,6 +221,7 @@ class EditorController extends Controller
       	    "drawioOfflineMode" => $offlineMode,
             "drawioFilePath" => rawurlencode($relativePath),
             "drawioAutosave" =>$this->config->GetAutosave(),
+            "drawioBasicSync" => $this->config->GetBasicSync(),
             "fileId" => $fileId,
             "filePath" => $filePath,
             "shareToken" => $shareToken

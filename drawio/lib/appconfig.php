@@ -22,6 +22,7 @@ class AppConfig {
     private $predefTheme = "kennedy"; //kennedy, minimal, atlas, dark
     private $predefLang = "auto";
     private $predefAutosave = "yes";
+    private $predefBasicSync = "no";
 
     private $appName;
 
@@ -35,6 +36,7 @@ class AppConfig {
     private $_theme = "DrawioTheme";
     private $_lang = "DrawioLang";
     private $_autosave = "DrawioAutosave";
+    private $_basicsync = "DrawioBasicSync";
 
     public function __construct($AppName)
     {
@@ -114,6 +116,21 @@ class AppConfig {
         if (empty($val)) $val = $this->predefAutosave;
         return $val;
     }
+
+    public function SetBasicSync($basicsync)
+    {
+        $this->logger->info("SetBasicSync: " . $basicsync, array("app" => $this->appName));
+        $this->config->setAppValue($this->appName, $this->_basicsync, $basicsync);
+    }
+
+    public function GetBasicSync()
+    {
+        $val = $this->config->getAppValue($this->appName, $this->_basicsync);
+        if (empty($val)) $val = $this->predefBasicSync;
+        return $val;
+    }
+
+
 
     public function GetAppName()
     {

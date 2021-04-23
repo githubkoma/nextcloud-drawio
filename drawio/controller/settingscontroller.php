@@ -64,7 +64,8 @@ class SettingsController extends Controller
             "drawioOfflineMode" => $this->config->GetOfflineMode(),
             "drawioTheme" => $this->config->GetTheme(),
             "drawioLang" => $this->config->GetLang(),
-            "drawioAutosave" => $this->config->GetAutosave()
+            "drawioAutosave" => $this->config->GetAutosave(),
+            "drawioBasicSync" => $this->config->GetBasicSync()
         ];
         return new TemplateResponse($this->appName, "settings", $data, "blank");
     }
@@ -78,12 +79,14 @@ class SettingsController extends Controller
         $theme = trim($_POST['theme']);
         $lang = trim($_POST['lang']);
         $autosave = trim($_POST['autosave']);
+        $basicsync = trim($_POST['basicsync']);
 
         $this->config->SetDrawioUrl($drawio);
         $this->config->SetOfflineMode($offlinemode);
         $this->config->SetTheme($theme);
         $this->config->SetLang($lang);
         $this->config->SetAutosave($autosave);
+        $this->config->SetBasicSync($basicsync);
 
         if (version_compare(implode(".", \OCP\Util::getVersion()), "13", ">=")) {
             $checkmime = new \OCA\Drawio\Migration\CheckMimeType();
@@ -102,7 +105,8 @@ class SettingsController extends Controller
             "offlineMode" => $this->config->GetOfflineMode(),
             "theme" => $this->config->GetTheme(),
             "lang" => $this->config->GetLang(),
-            "drawioAutosave" =>$this->config->GetAutosave()
+            "drawioAutosave" =>$this->config->GetAutosave(),
+            "drawioBasicSync" => $this->config->GetBasicSync()
             ];
     }
 

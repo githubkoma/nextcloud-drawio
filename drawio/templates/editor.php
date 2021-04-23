@@ -27,7 +27,8 @@
                 var originUrl = "<?php p($_['drawioUrl']); ?>";
                 var drawIoUrl = "<?php p($_['drawioUrl']); print_unescaped($frame_params); ?>"
                 var autosave = "<?php p($_['drawioAutosave']); ?>";
-                OCA.DrawIO.EditFile(iframe.contentWindow, filePath, originUrl, autosave);
+                var basicsync = "<?php p($_['drawioBasicSync']);?>";
+                OCA.DrawIO.EditFile(iframe.contentWindow, filePath, originUrl, autosave, basicsync);
                 iframe.setAttribute('src', drawIoUrl);
             <?php } ?>
         });
